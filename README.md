@@ -18,7 +18,7 @@ You can also see my other car projects:
 <!--8. [Тhis](https://github.com/muki01/I-K_Bus_Library) is my I/K Bus Communication Library for Arduino IDE.-->
 
 ## 📱 Interface Preview
-<img width=90% src="https://github.com/user-attachments/assets/5a3e0540-b56d-4c3a-a0bf-8c1affcda00c" />
+<img width=90% src="https://github.com/user-attachments/assets/9b3aebe5-998d-4731-85bc-a0d7666fd116" />
 <img width=90% src="https://github.com/user-attachments/assets/8544df16-cf62-4a80-8f19-cbd0daadfb51" />
 
 ## ✨ Key Features
