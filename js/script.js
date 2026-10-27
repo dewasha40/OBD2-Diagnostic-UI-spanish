@@ -1,3 +1,6 @@
+import { displayReading } from "./units.js";
+import { t, getLanguage, initLanguage } from "./i18n.js";
+import { errorCodesES } from "./errorCodes.es.js";
 import { InitWebSocket, setMessageHandler, sendData } from "./webSocket.js";
 import { errorCodes } from "./errorCodes.js";
 
@@ -70,8 +73,8 @@ async function switchPage(targetPage, orangeTitle, normalTitle, targetMenuElemen
     page = targetPage;
     sendData("page" + targetPage);
 
-    if (orangeTitle) orangeText.textContent = orangeTitle;
-    if (normalTitle) normalText.textContent = normalTitle;
+    if (orangeTitle) orangeText.textContent = t(orangeTitle);
+    if (normalTitle) normalText.textContent = t(normalTitle);
 
     // Prepare new elements
     const newElements = [];
@@ -390,7 +393,9 @@ let dataReceived2 = false;
 
 
 
+let lastPayload = null;
 function handleWebSocketMessage(wsMessage) {
+    lastPayload = wsMessage;
     if (!wsMessage) {
         updateConnectionStatus(false, false);
         return;
@@ -414,7 +419,7 @@ function handleWebSocketMessage(wsMessage) {
     else if (page == 1) {
         if (wsMessage.vehicleStatus == false) {
             statusBoxLiveData.style.display = "block";
-            statusLiveData.innerHTML = "Not Connected to the Vehicle.";
+            statusLiveData.innerHTML = t("Not Connected to the Vehicle.");
             dataBoxLiveData.innerHTML = "";
         } else {
             const liveData = wsMessage.LiveData;
@@ -423,15 +428,15 @@ function handleWebSocketMessage(wsMessage) {
             dataBoxLiveData.innerHTML = "";
             for (let key in liveData) {
                 if (liveData.hasOwnProperty(key)) {
-                    const data = liveData[key];
+                    const data = displayReading(key, liveData[key], liveData);
 
                     const box = document.createElement("div");
                     box.classList.add("live-card");
 
                     box.innerHTML = `
-                        <div class="label">${key}</div>
+                        <div class="label">${t(key)}</div>
                         <div class="value-area">
-                            <span class="value">${data.value}</span>
+                            <span class="value">${typeof data.value === "number" ? Number(data.value.toFixed(2)) : data.value}</span>
                             <span class="unit">${data.unit}</span>
                         </div>
                     `;
@@ -444,7 +449,7 @@ function handleWebSocketMessage(wsMessage) {
                 voltageBox.classList.add("live-card");
 
                 voltageBox.innerHTML = `
-                    <div class="label">Battery Voltage</div>
+                    <div class="label">${t("Battery Voltage")}</div>
                     <div class="value-area">
                         <span class="value">${batteryVoltage}</span>
                         <span class="unit">V</span>
@@ -458,7 +463,7 @@ function handleWebSocketMessage(wsMessage) {
         let DTCs = wsMessage.DTCs;
         if (wsMessage.vehicleStatus == false) {
             dataBoxErrorCodes.style.display = "none";
-            statusErrorCodes.innerHTML = "Not Connected to the Vehicle.";
+            statusErrorCodes.innerHTML = t("Not Connected to the Vehicle.");
             statusBoxErrorCodes.style.display = "block";
             btnArea.style.display = "none";
         } else if (DTCs) {
@@ -477,7 +482,7 @@ function handleWebSocketMessage(wsMessage) {
                     </div>
                     <div class="details">
                         <h1 class="errorCode">${code}</h1>
-                        <p class="errorMeaning">${errorCodes[code] || "Description not found for this error code."}</p>
+                        <p class="errorMeaning">${(getLanguage() === "es" ? errorCodesES[code] : errorCodes[code]) || t("Description not found for this error code.")}</p>
                     </div>
                 `;
                 errorCodesList.appendChild(box);
@@ -494,8 +499,8 @@ function handleWebSocketMessage(wsMessage) {
                         </svg>
                     </div>
                     <div class="details">
-                        <h1 class="errorCode">No DTC Found</h1>
-                        <p class="errorMeaning">No errors detected.</p>
+                        <h1 class="errorCode">${t("No DTC Found")}</h1>
+                        <p class="errorMeaning">${t("No errors detected.")}</p>
                     </div>
                 </div>
             `;
@@ -506,7 +511,7 @@ function handleWebSocketMessage(wsMessage) {
         if (wsMessage.vehicleStatus == false) {
             dataBoxFreezeFrame.innerHTML = "";
             dataBoxFreezeFrame.style.display = "none";
-            statusFreezeFrame.innerHTML = "Not Connected to the Vehicle.";
+            statusFreezeFrame.innerHTML = t("Not Connected to the Vehicle.");
             statusBoxFreezeFrame.style.display = "block";
         } else if (DTCs) {
             dataBoxFreezeFrame.innerHTML = "";
@@ -516,15 +521,15 @@ function handleWebSocketMessage(wsMessage) {
 
             for (let key in freezeFrame) {
                 if (freezeFrame.hasOwnProperty(key)) {
-                    const data = freezeFrame[key];
+                    const data = displayReading(key, freezeFrame[key], freezeFrame);
 
                     const box = document.createElement("div");
                     box.classList.add("live-card");
 
                     box.innerHTML = `
-                        <div class="label">${key}</div>
+                        <div class="label">${t(key)}</div>
                         <div class="value-area">
-                            <span class="value">${data.value}</span>
+                            <span class="value">${typeof data.value === "number" ? Number(data.value.toFixed(2)) : data.value}</span>
                             <span class="unit">${data.unit}</span>
                         </div>
                     `;
@@ -534,7 +539,7 @@ function handleWebSocketMessage(wsMessage) {
             }
         } else {
             dataBoxFreezeFrame.style.display = "none";
-            statusFreezeFrame.innerHTML = "No errors detected.";
+            statusFreezeFrame.innerHTML = t("No errors detected.");
             statusBoxFreezeFrame.style.display = "block";
         }
     } else if (page == 4) {
@@ -557,17 +562,17 @@ function handleWebSocketMessage(wsMessage) {
             }
         } else {
             statusBoxSpeedTest.style.display = "block";
-            statusSpeedTest.innerHTML = "Not Connected to the Vehicle.";
+            statusSpeedTest.innerHTML = t("Not Connected to the Vehicle.");
             dataBoxSpeedTest.style.display = "none";
         }
     } else if (page == 5) {
         if (wsMessage.vehicleStatus == false) {
-            VIN.innerHTML = "Not Connected to the Vehicle.";
-            ID.innerHTML = "Not Connected to the Vehicle.";
-            IDNum.innerHTML = "Not Connected to the Vehicle.";
-            liveDataField.innerHTML = "Not Connected to the Vehicle.";
-            freezeFrameField.innerHTML = "Not Connected to the Vehicle.";
-            vehicleInfoField.innerHTML = "Not Connected to the Vehicle.";
+            VIN.innerHTML = t("Not Connected to the Vehicle.");
+            ID.innerHTML = t("Not Connected to the Vehicle.");
+            IDNum.innerHTML = t("Not Connected to the Vehicle.");
+            liveDataField.innerHTML = t("Not Connected to the Vehicle.");
+            freezeFrameField.innerHTML = t("Not Connected to the Vehicle.");
+            vehicleInfoField.innerHTML = t("Not Connected to the Vehicle.");
         } else {
             VIN.innerHTML = wsMessage.VIN;
             ID.innerHTML = wsMessage.ID;
@@ -588,7 +593,7 @@ function handleWebSocketMessage(wsMessage) {
             "Automatic": "Automatic"
         };
 
-        selectedProtocol.innerHTML = protocolMap[wsMessage.selectedProtocol] || "Unknown";
+        selectedProtocol.innerHTML = t(protocolMap[wsMessage.selectedProtocol] || "Unknown") || t("Unknown");
 
         if (!dataReceived1) {
             protocol.value = wsMessage.selectedProtocol;
@@ -598,13 +603,13 @@ function handleWebSocketMessage(wsMessage) {
         if (!wsMessage.vehicleStatus) {
             selectPID_Status.style.display = "block";
             selectPID_Form.style.display = "none";
-            connectedProtocol.innerHTML = selectPID_Status.innerHTML = "Not Connected to the Vehicle.";
+            connectedProtocol.innerHTML = selectPID_Status.innerHTML = t("Not Connected to the Vehicle.");
             dataReceived2 = false;
         }
 
         if (wsMessage.vehicleStatus && !dataReceived2) {
-            connectedProtocol.innerHTML = protocolMap[wsMessage.connectedProtocol];
-            selectPID_Status.innerHTML = "Waiting...";
+            connectedProtocol.innerHTML = t(protocolMap[wsMessage.connectedProtocol] || "Unknown");
+            selectPID_Status.innerHTML = t("Waiting...");
 
             if (wsMessage.SupportedLiveData) {
                 selectPID_Boxes.innerHTML = "";
@@ -623,8 +628,8 @@ function handleWebSocketMessage(wsMessage) {
                     const box = document.createElement("div");
                     box.classList.add("box");
                     box.innerHTML = `
-                    <label for='${key}'>${key}: </label>
-                    <input type='checkbox' name='${key}' value='${data.pid}' ${isChecked}>
+                    <label for='pid-${data.pid}'>${t(key)}: </label>
+                    <input type='checkbox' id='pid-${data.pid}' name='${key}' value='${data.pid}' ${isChecked}>
                     `;
 
                     selectPID_Boxes.appendChild(box);
@@ -663,5 +668,12 @@ if (darkModeToggle) {
 }
 
 
+initLanguage();
+window.addEventListener('obd-language-change',()=>{
+ const titles=[['OBD2',' Master'],['Live','Data'],['Error','Codes'],['Freeze','Frame'],['Speed','Test'],['Vehicle','Info'],['Settings',' ']];
+ orangeText.textContent=t(titles[page][0]);normalText.textContent=t(titles[page][1]);
+ dataReceived2=false;
+ if(lastPayload)handleWebSocketMessage(lastPayload);
+});
 setMessageHandler(handleWebSocketMessage);
 InitWebSocket();

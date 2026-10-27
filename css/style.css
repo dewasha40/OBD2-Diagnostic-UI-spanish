@@ -1810,3 +1810,9 @@ body.dark-mode #statusBoxSpeedTest {
         width: 30%;
     }
 }
+/* Evita solapamientos con los textos traducidos en pantallas estrechas. */
+.toggle-row { gap: 12px; }
+.toggle-text { flex: 1; min-width: 0; }
+.card-language select { max-width:100%; }
+.live-card .value-area { flex-wrap: wrap; }
+.live-card .unit { white-space: nowrap; }
